@@ -399,7 +399,7 @@ mod tests {
             let public_outputs = &statements[statements.len() - 1][mid..];
 
             let srs_vk = INNER_PRODUCT_SRS.specialize(statements.len()).1;
-            let _aggregate_proof_and_instances_verified =
+            let aggregate_proof_and_instances_verified =
                 verify_aggregate_proof_and_aggregate_instances(
                     &srs_vk,
                     &pvk,
@@ -424,7 +424,7 @@ mod tests {
             assert!(aggregate_proof_verified);
             // Uncomment this and remove `aggregate_proof` entirely once input aggregation
             // is working in bellperson.
-            // assert!(aggregate_proof_and_instances_verified);
+            assert!(aggregate_proof_and_instances_verified);
         };
 
         let constraint_systems = if check_constraint_systems {
@@ -503,8 +503,6 @@ mod tests {
             100,
             false,
         );
-
-        // outer_prove_aux(&"(eq 5 6)", Expression::Nil, 5, false, true, 100, false);
     }
 
     #[test]
@@ -575,7 +573,6 @@ mod tests {
                                      (* base ((exp base) (- exponent 1))))))))
                 ((exp 5) 3))",
             |store| store.num(125),
-            // 117, // FIXME: is this change correct?
             91,
             DEFAULT_CHECK_GROTH16,
             true,
@@ -596,7 +593,6 @@ mod tests {
                                           (((exp base) (- exponent 1)) (* acc base))))))))
                 (((exp 5) 5) 1))",
             |store| store.num(3125),
-            // 248, // FIXME: is this change correct?
             201,
             DEFAULT_CHECK_GROTH16,
             true,
