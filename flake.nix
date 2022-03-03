@@ -37,8 +37,8 @@
     let
       lib = utils.lib.${system};
       pkgs = nixpkgs.legacyPackages.${system};
-      inherit (lib) buildRustProject testRustProject rustDefault filterRustProject;
-      rust = rustDefault;
+      inherit (lib) buildRustProject testRustProject getRust filterRustProject;
+      rust = getRust { date = "2022-02-20"; sha256 = "sha256-ZptNrC/0Eyr0c3IiXVWTJbuprFHq6E1KfBgqjGQBIRs="; };
       crateName = "lurk";
       src = ./.;
       buildInputs = with pkgs;
