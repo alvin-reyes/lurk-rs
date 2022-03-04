@@ -86,6 +86,7 @@
           rust-analyzer
           clippy
           rustfmt
+          emscripten
         ];
       };
     });

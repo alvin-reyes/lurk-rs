@@ -10,7 +10,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.45"
-bellperson = { version = "0.18.0", optional = true }
+bellperson = { version = "0.18.0", default-features = false, optional = true }
 dirs = "4.0.0"
 blstrs = "0.4.1"
 ff = "0.11.0"
@@ -37,12 +37,14 @@ dashmap = "5.0.0"
 [features]
 default = ["gpu", "not-wasm"]
 # Dependencies and features unsupported/unwanted in wasm
-not-wasm = [ "bellperson", "rustyline", "rustyline-derive", "neptune" ]
+not-wasm = [ "bellperson/default", "rustyline", "rustyline-derive", "neptune" ]
 
 gpu = ["neptune/opencl"]
 # A wasm friendly build
 wasm = [
-  "getrandom/js"
+  "getrandom/js",
+  "bellperson/wasm",
+  "neptune"
 ]
 
 [dev-dependencies]
@@ -60,5 +62,6 @@ members = [
 
 
 [patch.crates-io]
-bellperson = { git = "https://github.com/filecoin-project/bellperson", branch = "instance-aggregation" }
+# bellperson = { git = "https://github.com/filecoin-project/bellperson", branch = "instance-aggregation" }
+bellperson = { git = "https://github.com/yatima-inc/bellperson", branch = "acs/wasm-support" }
 nova = { git = "https://github.com/porcuquine/nova", package = "nova-snark" }
