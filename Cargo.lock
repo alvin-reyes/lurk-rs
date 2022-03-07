@@ -66,7 +66,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "bellperson"
 version = "0.18.2"
-source = "git+https://github.com/yatima-inc/bellperson?branch=acs/wasm-support#82c79489c78ebbfad8ae57fb5486dcf69d06aac3"
+source = "git+https://github.com/lurk-lang/bellperson?branch=acs/wasm-support#82c79489c78ebbfad8ae57fb5486dcf69d06aac3"
 dependencies = [
  "bincode",
  "bitvec",
@@ -955,8 +955,7 @@ dependencies = [
 [[package]]
 name = "neptune"
 version = "5.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d4dfea4e31f0c2efdde6428997a395eec130fd42554b68f5c9844301db4911a"
+source = "git+https://github.com/lurk-lang/neptune?branch=acs/wasm-support#1ef397568dcfff34a7d2ebd4b742cadad7d3000e"
 dependencies = [
  "bellperson",
  "blake2s_simd",
@@ -1000,7 +999,7 @@ dependencies = [
 [[package]]
 name = "nova-snark"
 version = "0.4.0"
-source = "git+https://github.com/porcuquine/nova#f9fe69fd28f1769a0c8ca694cba8788ebca42fed"
+source = "git+https://github.com/lurk-lang/nova?branch=acs/wasm-support#8336ef1ab396c5e1c78a8494017ae48464d02da8"
 dependencies = [
  "bellperson",
  "digest 0.8.1",
