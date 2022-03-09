@@ -1,5 +1,5 @@
 {
-  description = "TODO Description";
+  description = "Lurk language for zero knowledge proofs";
   inputs = {
     nixpkgs.url = github:nixos/nixpkgs;
     flake-utils = {
@@ -57,7 +57,7 @@
       testProject = buildRustProject { doCheck = true; inherit rust root; };
       # Load a nightly rust. The hash takes precedence over the date so remember to set it to
       # something like `lib.fakeSha256` when changing the date.
-      crateName = "my-crate";
+      crateName = "lurk";
       root = ./.;
       # This is a wrapper around naersk build
       # Remember to add Cargo.lock to git for naersk to work

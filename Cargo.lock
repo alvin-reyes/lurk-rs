@@ -15,9 +15,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.55"
+version = "1.0.56"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "159bb86af3a200e19a068f4224eae4c8bb2d0fa054c7e5d1cacd5cef95e684cd"
+checksum = "4361135be9122e0870de935d7c439aef945b9f9ddd4199a553b5270b49c82a27"
 
 [[package]]
 name = "arrayref"
@@ -66,12 +66,12 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 [[package]]
 name = "bellperson"
 version = "0.18.2"
-source = "git+https://github.com/lurk-lang/bellperson?branch=acs/wasm-support#82c79489c78ebbfad8ae57fb5486dcf69d06aac3"
+source = "git+https://github.com/lurk-lang/bellperson?branch=acs/wasm-support#6e18c07792daf6a486fa4d3978f4a639d8ad0619"
 dependencies = [
  "bincode",
  "bitvec",
  "blake2s_simd",
- "blstrs",
+ "blstrs 0.4.2 (git+https://github.com/filecoin-project/blstrs?branch=master)",
  "byteorder",
  "crossbeam-channel",
  "digest 0.9.0",
@@ -196,6 +196,21 @@ dependencies = [
  "blst",
  "byte-slice-cast",
  "ec-gpu",
+ "ff",
+ "group",
+ "pairing",
+ "rand_core 0.6.3",
+ "serde",
+ "subtle",
+]
+
+[[package]]
+name = "blstrs"
+version = "0.4.2"
+source = "git+https://github.com/filecoin-project/blstrs?branch=master#07a84f9727d2fb7387efb2df0f17ddc5d35571d3"
+dependencies = [
+ "blst",
+ "byte-slice-cast",
  "ff",
  "group",
  "pairing",
@@ -877,7 +892,7 @@ dependencies = [
  "ahash",
  "anyhow",
  "bellperson",
- "blstrs",
+ "blstrs 0.4.2 (git+https://github.com/filecoin-project/blstrs?branch=master)",
  "criterion",
  "dashmap",
  "dirs 4.0.0",
@@ -905,7 +920,7 @@ dependencies = [
 name = "lurk_macro"
 version = "0.1.0"
 dependencies = [
- "blstrs",
+ "blstrs 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "ff",
  "gensym",
  "lurk",
@@ -959,7 +974,7 @@ source = "git+https://github.com/lurk-lang/neptune?branch=acs/wasm-support#1ef39
 dependencies = [
  "bellperson",
  "blake2s_simd",
- "blstrs",
+ "blstrs 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder",
  "ec-gpu",
  "ec-gpu-gen",
@@ -1433,9 +1448,9 @@ dependencies = [
 
 [[package]]
 name = "regex"
-version = "1.5.4"
+version = "1.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d07a8629359eb56f1e2fb1652bb04212c072a87ba68546a04065d525673ac461"
+checksum = "1a11647b6b25ff05a515cb92c365cec08801e83423a235b51e231e1808747286"
 dependencies = [
  "regex-syntax",
 ]

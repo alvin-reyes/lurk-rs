@@ -12,7 +12,7 @@ edition = "2018"
 anyhow = "1.0.45"
 bellperson = { git = "https://github.com/lurk-lang/bellperson", branch = "acs/wasm-support", version = "0.18.0", default-features = false, optional = true }
 dirs = "4.0.0"
-blstrs = "0.4.2"
+blstrs = { git = "https://github.com/filecoin-project/blstrs", default-features = false, branch = "master", version = "0.4.2", optional = true }
 ff = "0.11.0"
 generic-array = "0.14.4"
 itertools = "0.9"
@@ -37,12 +37,22 @@ dashmap = "5.0.0"
 [features]
 default = ["gpu", "not-wasm"]
 # Dependencies and features unsupported/unwanted in wasm
-not-wasm = [ "bellperson/default", "rustyline", "rustyline-derive", "neptune", "nova/default" ]
+not-wasm = [
+  "bellperson",
+  "bellperson/default",
+  "bellperson/memmap",
+  "rustyline",
+  "rustyline-derive",
+  "neptune",
+  "nova/default",
+  "blstrs/default"
+]
 
 gpu = ["neptune/opencl"]
 # A wasm friendly build
 wasm = [
   "getrandom/js",
+  "blstrs/serde",
   "bellperson/wasm",
   "bellperson/groth16",
   "nova/wasm",

@@ -7,6 +7,7 @@ pub mod circuit;
 pub mod eval;
 pub mod parser;
 pub mod proof;
+#[cfg(feature = "rustyline")]
 pub mod repl;
 pub mod store;
 pub mod writer;
