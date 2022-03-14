@@ -69,10 +69,16 @@
         copySources = [ "examples" "src" ];
         copyBins = true;
       };
+      lurk-wasm = project.override {
+        targets = [ "wasm32-unknown-unknown" ];
+        default-features = false;
+        features = [ "wasm" ];
+      };
     in
     {
       packages = {
         ${crateName} = project;
+        inherit lurk-example lurk-wasm;
         "${crateName}-test" = testProject;
       };
 
