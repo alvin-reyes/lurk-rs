@@ -25,8 +25,8 @@ pairing_lib = { version = "0.21", package = "pairing" }
 pretty_env_logger = "0.4"
 rand = "0.8"
 getrandom = { version = "0.2.5" }
-rustyline = { version = "9.0.0", optional = true }
-rustyline-derive = { version = "0.5.0", optional = true }
+rustyline = { version = "9.0.0", git = "https://github.com/yatima-inc/rustyline", branch = "acs/wasm-web-support", default-features = false }
+rustyline-derive = { version = "0.5.0" }
 rayon = "1.5.1"
 rand_xorshift = "0.3.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -43,8 +43,7 @@ not-wasm = [
   "bellperson",
   "bellperson/default",
   "bellperson/memmap",
-  "rustyline",
-  "rustyline-derive",
+  "rustyline/default",
   "neptune",
   "nova/default",
   "blstrs/default"
@@ -58,7 +57,8 @@ wasm = [
   "bellperson/wasm",
   "bellperson/groth16",
   "nova/wasm",
-  "neptune/wasm"
+  "neptune/wasm",
+  "rustyline/wasm"
 ]
 
 [dev-dependencies]
