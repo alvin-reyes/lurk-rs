@@ -37,7 +37,9 @@
           extensions = [ "rust-src" "rust-analysis" ];
         };
       # This is the version used across projects
-      rust = getRust { date = "2022-02-20"; sha256 = "sha256-ZptNrC/0Eyr0c3IiXVWTJbuprFHq6E1KfBgqjGQBIRs="; };
+      rust2022-02-20 = getRust { date = "2022-02-20"; sha256 = "sha256-ZptNrC/0Eyr0c3IiXVWTJbuprFHq6E1KfBgqjGQBIRs="; };
+      rust2022-03-15 = getRust { date = "2022-03-15"; sha256 = "sha256-C7X95SGY0D7Z17I8J9hg3z9cRnpXP7FjAOkvEdtB9nE="; };
+      rust = rust2022-03-15;
       # Get a naersk with the input rust version
       naerskWithRust = rust: naersk.lib."${system}".override {
         rustc = rust;
@@ -59,10 +61,16 @@
       # something like `lib.fakeSha256` when changing the date.
       crateName = "lurk";
       root = ./.;
+      buildInputs = with pkgs;
+      if !stdenv.isDarwin
+      then [ ocl-icd ]
+      else [
+        darwin.apple_sdk.frameworks.OpenCL
+      ];
       # This is a wrapper around naersk build
       # Remember to add Cargo.lock to git for naersk to work
       project = buildRustProject {
-        inherit root rust;
+        inherit root rust buildInputs;
       };
       lurk-example = project.override {
         cargoBuildOptions = d: d ++ [ "--example lurk" ];
