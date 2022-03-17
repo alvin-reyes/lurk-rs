@@ -1,7 +1,7 @@
 use crate::eval::{empty_sym_env, Evaluator, IO};
 use crate::store::{ContPtr, ContTag, Expression, Pointer, Ptr, Store, Tag};
 use crate::writer::Write;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use blstrs::Scalar as Fr;
 use rustyline::error::ReadlineError;
 use rustyline::validate::{
@@ -68,17 +68,15 @@ pub trait Repl {
     /// Run a single line of input from the user
     /// This will mutably update the shell_state
     fn handle_line(&mut self, line: String) -> Result<LineResult, String> {
-        // let mutex_env = self.get_env();
-        // let mut env = mutex_env.lock().unwrap();
-        // let store = self.get_store();
         let state_mutex = self.get_state();
-        let mut state = state_mutex.lock().unwrap();
+        let mut state = state_mutex.lock().map_err(|e| format!("{}", e))?;
         let limit = state.limit;
         let store_mutex = state.get_store();
-        let mut store = store_mutex.lock().unwrap();
         let result = state.maybe_handle_command(&line, &|s| {
             self.println(s);
         });
+        // This must happen after maybe_handle_command
+        let mut store = store_mutex.lock().map_err(|e| format!("{}", e))?;
 
         match result {
             Ok((handled_command, should_continue)) if handled_command => {
@@ -162,7 +160,7 @@ impl CliRepl {
 }
 
 impl Repl for CliRepl {
-    fn println(&self, s: String) -> Result<(), String> {
+    fn println(&self, s: String) -> Result<()> {
         println!("{}", s);
         Ok(())
     }
@@ -190,17 +188,16 @@ impl Repl for CliRepl {
 /// Run the cli repl
 /// For the moment, input must be on a single line.
 pub fn repl<P: AsRef<Path>>(lurk_file: Option<P>) -> Result<()> {
-    println!("Lurk REPL welcomes you.");
-
     let s = Arc::new(Mutex::new(Store::default()));
     let limit = 100_000_000;
     let mut repl = CliRepl::new(s, limit)?;
+    repl.println("Lurk REPL welcomes you.")?;
 
     {
         if let Some(lurk_file) = lurk_file {
             repl.state
                 .lock()
-                .unwrap()
+                .map_err(|e| anyhow!("{}", e))?
                 .handle_run(&lurk_file, &|s| println!("{}", s))
                 .unwrap();
             return Ok(());
@@ -271,7 +268,7 @@ impl ReplState {
         println: &dyn Fn(String),
     ) -> Result<(bool, bool)> {
         let store_mutex = self.store.clone();
-        let mut store = store_mutex.lock().unwrap();
+        let mut store = store_mutex.lock().map_err(|e| anyhow!("{}", e))?;
         let mut chars = line.chars().peekable();
         let maybe_command = store.read_next(&mut chars);
 
