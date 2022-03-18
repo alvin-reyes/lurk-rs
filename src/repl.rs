@@ -10,7 +10,7 @@ use rustyline::validate::{
 use rustyline::{Config, Editor};
 use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
 use std::fs::read_to_string;
-use std::io::{self, Write as _};
+use std::io::{self, StdoutLock, Write as _};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
@@ -48,13 +48,13 @@ pub enum LineResult {
 /// The design is currently based on rustyline.
 pub trait Repl {
     /// Print results to the interface suited for this implementation.
-    fn println(&self, s: String) -> Result<(), String>;
+    fn println(&self, s: String) -> Result<()>;
 
     /// Load the command history
     fn load_history(&mut self) -> Result<()>;
 
     /// Add a new entry to the command history
-    fn add_history_entry(&mut self, s: &str);
+    fn add_history_entry(&mut self, s: &str) -> Result<()>;
 
     /// Save the command history
     fn save_history(&mut self) -> Result<()>;
@@ -62,21 +62,24 @@ pub trait Repl {
     /// Get a thread safe mutable pointer to the current ReplEnv
     fn get_state(&self) -> Arc<Mutex<ReplState>>;
 
+    /// Get a Write buffer for this repl.
+    fn writer<'a>(&'a mut self) -> &'a mut (dyn io::Write + 'a);
+
     /// Get store for this Repl
     // fn get_store(&self) -> Rc<dyn IpldStore>;
 
     /// Run a single line of input from the user
     /// This will mutably update the shell_state
-    fn handle_line(&mut self, line: String) -> Result<LineResult, String> {
+    fn handle_line(&mut self, line: String) -> Result<LineResult> {
         let state_mutex = self.get_state();
-        let mut state = state_mutex.lock().map_err(|e| format!("{}", e))?;
+        let mut state = state_mutex.lock().map_err(|e| anyhow!("{}", e))?;
         let limit = state.limit;
         let store_mutex = state.get_store();
         let result = state.maybe_handle_command(&line, &|s| {
-            self.println(s);
+            self.println(s).unwrap();
         });
         // This must happen after maybe_handle_command
-        let mut store = store_mutex.lock().map_err(|e| format!("{}", e))?;
+        let mut store = store_mutex.lock().map_err(|e| anyhow!("{}", e))?;
 
         match result {
             Ok((handled_command, should_continue)) if handled_command => {
@@ -88,8 +91,7 @@ pub trait Repl {
             }
             Ok(_) => (),
             Err(e) => {
-                let err = format!("Error when handling {}: {:?}", line, e);
-                self.println(err.clone());
+                let err = anyhow!("Error when handling {}: {:?}", line, e);
                 return Err(err);
             }
         };
@@ -104,26 +106,23 @@ pub trait Repl {
                 iterations,
             ) = Evaluator::new(expr, state.env, &mut store, limit).eval();
 
-            self.println(format!("[{} iterations] => ", iterations));
+            self.println(format!("[{} iterations] => ", iterations))?;
 
             match next_cont.tag() {
                 ContTag::Outermost | ContTag::Terminal => {
-                    // let mut handle = stdout.lock();
-                    // result.fmt(&s, &mut handle).map_err(|e| format!("{}", e))?;
-                    println!();
+                    let mut handle = self.writer();
+                    result
+                        .fmt(&store, &mut handle)
+                        .map_err(|e| anyhow!("{}", e))?;
+                    handle.flush()?;
+                    self.println("".to_string())?;
+                    Ok(LineResult::Success)
                 }
-                ContTag::Error => {
-                    self.println(format!("ERROR!"));
-                }
-                _ => {
-                    self.println(format!("Computation incomplete after limit: {}", limit));
-                    ()
-                }
+                ContTag::Error => Err(anyhow!("ERROR!")),
+                _ => Err(anyhow!("Computation incomplete after limit: {}", limit)),
             }
-            Ok(LineResult::Success)
         } else {
-            self.println(format!("failed to parse"));
-            Err("Failed to parse".to_string())
+            Err(anyhow!("Failed to parse"))
         }
     }
 }
@@ -132,6 +131,7 @@ pub struct CliRepl {
     state: Arc<Mutex<ReplState>>,
     rl: Editor<InputValidator>,
     history_path: PathBuf,
+    stdout: StdoutLock<'static>,
 }
 
 impl CliRepl {
@@ -150,11 +150,13 @@ impl CliRepl {
         let mut rl = Editor::with_config(config);
         rl.set_helper(Some(h));
 
+        let stdout = io::stdout().lock();
         let state = Arc::new(Mutex::new(ReplState::new(store, limit)));
         Ok(Self {
             state,
             rl,
             history_path,
+            stdout,
         })
     }
 }
@@ -165,12 +167,18 @@ impl Repl for CliRepl {
         Ok(())
     }
 
+    fn writer<'a>(&'a mut self) -> &'a mut (dyn io::Write + 'a) {
+        &mut self.stdout
+    }
+
     fn save_history(&mut self) -> Result<()> {
         self.rl.save_history(&self.history_path)?;
         Ok(())
     }
 
-    fn add_history_entry(&mut self, s: &str) {}
+    fn add_history_entry(&mut self, _s: &str) -> Result<()> {
+        Ok(())
+    }
 
     fn get_state(&self) -> Arc<Mutex<ReplState>> {
         self.state.clone()
@@ -191,7 +199,7 @@ pub fn repl<P: AsRef<Path>>(lurk_file: Option<P>) -> Result<()> {
     let s = Arc::new(Mutex::new(Store::default()));
     let limit = 100_000_000;
     let mut repl = CliRepl::new(s, limit)?;
-    repl.println("Lurk REPL welcomes you.")?;
+    repl.println("Lurk REPL welcomes you.".to_owned())?;
 
     {
         if let Some(lurk_file) = lurk_file {
@@ -203,8 +211,6 @@ pub fn repl<P: AsRef<Path>>(lurk_file: Option<P>) -> Result<()> {
             return Ok(());
         }
     }
-
-    let stdout = io::stdout();
 
     loop {
         match repl.rl.readline("> ") {
