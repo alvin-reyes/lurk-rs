@@ -1,0 +1,13 @@
+[package]
+name = "lurk-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "lurk"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "3.1.6", features = ["derive"] }
+lurk = { path = ".." }
+anyhow = { version = "1.0" }

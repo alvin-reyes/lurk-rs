@@ -37,8 +37,8 @@
     let
       lib = utils.lib.${system};
       pkgs = nixpkgs.legacyPackages.${system};
-      inherit (lib) buildRustProject testRustProject rustDefault filterRustProject;
-      rust = rustDefault;
+      inherit (lib) buildRustProject testRustProject getRust filterRustProject;
+      rustNightly = getRust { date = "2022-02-20"; sha256 = "sha256-ZptNrC/0Eyr0c3IiXVWTJbuprFHq6E1KfBgqjGQBIRs="; };
       crateName = "lurk";
       src = ./.;
       buildInputs = with pkgs;
@@ -48,6 +48,7 @@
           darwin.apple_sdk.frameworks.OpenCL
         ];
       project = buildRustProject {
+      	rust = rustNightly;
         root = ./.;
         inherit src buildInputs;
         copyLibs = true;
@@ -81,7 +82,7 @@
       # `nix develop`
       devShell = pkgs.mkShell {
         inputsFrom = builtins.attrValues self.packages.${system};
-        nativeBuildInputs = [ rust ];
+        nativeBuildInputs = [ rustNightly ];
         buildInputs = with pkgs; buildInputs ++ [
           rust-analyzer
           clippy
