@@ -38,7 +38,9 @@
       lib = utils.lib.${system};
       pkgs = nixpkgs.legacyPackages.${system};
       inherit (lib) buildRustProject testRustProject getRust filterRustProject;
-      rustNightly = getRust { date = "2022-02-20"; sha256 = "sha256-ZptNrC/0Eyr0c3IiXVWTJbuprFHq6E1KfBgqjGQBIRs="; };
+      # Load a nightly rust. The hash takes precedence over the date so remember to set it to
+      # something like `lib.fakeSha256` when changing the date.
+      rustNightly = getRust { date = "2022-03-23"; sha256 = "sha256-r/o9S7CPus34f/r9OPbSGYNzuP92jEZH1O8iHTC9/Aw="; };
       crateName = "lurk";
       src = ./.;
       buildInputs = with pkgs;
@@ -48,7 +50,7 @@
           darwin.apple_sdk.frameworks.OpenCL
         ];
       project = buildRustProject {
-      	rust = rustNightly;
+        rust = rustNightly;
         root = ./.;
         inherit src buildInputs;
         copyLibs = true;
