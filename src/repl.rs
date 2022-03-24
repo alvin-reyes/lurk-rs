@@ -65,9 +65,6 @@ pub trait Repl {
     /// Get a Write buffer for this repl.
     fn writer<'a>(&'a mut self) -> &'a mut (dyn io::Write + 'a);
 
-    /// Get store for this Repl
-    // fn get_store(&self) -> Rc<dyn IpldStore>;
-
     /// Run a single line of input from the user
     /// This will mutably update the shell_state
     fn handle_line(&mut self, line: String) -> Result<LineResult> {
@@ -287,7 +284,7 @@ impl ReplState {
                             Tag::Str => {
                                 let path = store.fetch(&s).unwrap();
                                 let path = PathBuf::from(path.as_str().unwrap());
-                                self.handle_load(path)?;
+                                self.handle_load(path, println)?;
                                 (true, true)
                             }
                             other => {
@@ -314,7 +311,7 @@ impl ReplState {
                     }
                     s => {
                         if s.starts_with(':') {
-                            println!("Unkown command: {}", s);
+                            println(format!("Unkown command: {}", s));
                             (true, true)
                         } else {
                             (false, true)
@@ -329,8 +326,8 @@ impl ReplState {
         Ok(result)
     }
 
-    pub fn handle_load<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
-        println!("Loading from {}.", path.as_ref().to_str().unwrap());
+    pub fn handle_load<P: AsRef<Path>>(&mut self, path: P, println: &dyn Fn(String)) -> Result<()> {
+        println(format!("Loading from {}.", path.as_ref().to_str().unwrap()));
         let input = read_to_string(path)?;
 
         let store_mutex = self.store.clone();
@@ -340,7 +337,7 @@ impl ReplState {
 
         self.env = result;
 
-        println!("Read: {}", input);
+        println(format!("Read: {}", input));
         io::stdout().flush().unwrap();
         Ok(())
     }
@@ -356,7 +353,11 @@ impl ReplState {
         let p = path;
 
         let input = read_to_string(path)?;
-        println!("Read from {}: {}", path.as_ref().to_str().unwrap(), input);
+        println(format!(
+            "Read from {}: {}",
+            path.as_ref().to_str().unwrap(),
+            input
+        ));
         let mut chars = input.chars().peekable();
 
         while let Some((ptr, is_meta)) = store.read_maybe_meta(&mut chars) {
@@ -370,7 +371,7 @@ impl ReplState {
                                     Expression::Str(path) => {
                                         let joined =
                                             p.as_ref().parent().unwrap().join(Path::new(&path));
-                                        self.handle_load(&joined)?
+                                        self.handle_load(&joined, println)?
                                     }
                                     _ => panic!("Argument to :LOAD must be a string."),
                                 }
@@ -423,8 +424,8 @@ impl ReplState {
             } else {
                 let (result, _limit, _next_cont) = self.eval_expr(ptr, &mut store);
 
-                println!("Read: {}", input);
-                println!("Evaled: {}", result.fmt_to_string(&store));
+                println(format!("Read: {}", input));
+                println(format!("Evaled: {}", result.fmt_to_string(&store)));
                 io::stdout().flush().unwrap();
             }
         }

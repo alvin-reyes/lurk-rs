@@ -71,6 +71,10 @@
       # Remember to add Cargo.lock to git for naersk to work
       project = buildRustProject {
         inherit root rust buildInputs;
+        C_INCLUDE_PATH = "${pkgs.llvmPackages_6.libcxx}/lib";
+        CPP_INCLUDE_PATH = "${pkgs.llvmPackages_6.libcxx}/lib";
+        LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib64:$LD_LIBRARY_PATH";
+        PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
       };
       lurk-example = project.override {
         cargoBuildOptions = d: d ++ [ "--example lurk" ];
@@ -81,6 +85,7 @@
         targets = [ "wasm32-unknown-unknown" ];
         default-features = false;
         features = [ "wasm" ];
+        copyTarget = true;
       };
     in
     {
@@ -100,7 +105,10 @@
           rust-analyzer
           clippy
           rustfmt
+          wasm-pack
+          glibc
           emscripten
+          llvmPackages_6.libcxx
         ];
       };
     });
