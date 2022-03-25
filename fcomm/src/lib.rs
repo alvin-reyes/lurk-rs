@@ -378,7 +378,7 @@ impl Opening<Bls12> {
         limit: usize,
         chain: bool,
         commitment_path: Option<P>,
-        chained_function_path: Option<P>,
+        chained_function_path: Option<std::path::PathBuf>,
     ) -> Result<Proof<Bls12>, Error> {
         let rng = OsRng;
 
