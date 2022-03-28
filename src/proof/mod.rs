@@ -13,6 +13,7 @@ pub(crate) type SequentialCS<'a, F, IO, Witness> =
 pub trait Provable<F: PrimeField> {
     fn public_inputs(&self) -> Vec<F>;
     fn public_input_size() -> usize;
+    fn chunk_frame_count(&self) -> usize;
 }
 
 #[allow(dead_code)]
@@ -46,7 +47,7 @@ fn verify_sequential_css<F: PrimeField + Copy>(
 pub trait Prover<F: PrimeField> {
     fn chunk_frame_count(&self) -> usize;
 
-    fn needs_frame_padding(&self, total_frames: usize, _is_terminal: bool) -> bool {
+    fn needs_frame_padding(&self, total_frames: usize) -> bool {
         self.frame_padding_count(total_frames) != 0
     }
     fn frame_padding_count(&self, total_frames: usize) -> usize {
@@ -54,6 +55,7 @@ pub trait Prover<F: PrimeField> {
     }
 
     fn expected_total_iterations(&self, raw_iterations: usize) -> usize {
+        let raw_iterations = raw_iterations + 1;
         let cfc = self.chunk_frame_count();
         let full_multiframe_count = raw_iterations / cfc;
         let unfull_multiframe_frame_count = raw_iterations % cfc;

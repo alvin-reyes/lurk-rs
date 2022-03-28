@@ -7,6 +7,7 @@ pub mod logging;
 pub mod parser;
 pub mod proof;
 pub mod repl;
+pub mod scalar_store;
 pub mod store;
 #[cfg(feature = "wasm")]
 pub mod wasm;

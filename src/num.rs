@@ -18,14 +18,13 @@ impl<F: PrimeField> Display for Num<F> {
         match self {
             Num::Scalar(s) => {
                 let le_bytes = s.to_repr();
-                write!(f, "Num(0x")?;
+                write!(f, "0x")?;
                 for &b in le_bytes.as_ref().iter().rev() {
                     write!(f, "{:02x}", b)?;
                 }
-                write!(f, ")")?;
                 Ok(())
             }
-            Num::U64(n) => write!(f, "Num({:#x})", n),
+            Num::U64(n) => write!(f, "{}", n),
         }
     }
 }
@@ -35,7 +34,13 @@ impl<F: PrimeField> Hash for Num<F> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
             Num::Scalar(s) => s.to_repr().as_ref().hash(state),
-            Num::U64(n) => n.hash(state),
+
+            Num::U64(n) => {
+                let mut bytes = F::Repr::default();
+
+                bytes.as_mut()[..8].copy_from_slice(&n.to_le_bytes());
+                bytes.as_ref().hash(state);
+            }
         }
     }
 }
@@ -120,8 +125,9 @@ impl<F: PrimeField> DivAssign for Num<F> {
         assert!(!rhs.is_zero(), "can not divide by 0");
         match (*self, rhs) {
             (Num::U64(ref mut a), Num::U64(b)) => {
-                if let Some(res) = a.checked_div(b) {
-                    *self = Num::U64(res);
+                // The result will only be Num::U64 if b divides a.
+                if *a % b == 0 {
+                    *self = Num::U64(*a / b);
                 } else {
                     *self = Num::Scalar(F::from(*a) * F::from(b).invert().unwrap());
                 }
@@ -154,6 +160,10 @@ impl<F: PrimeField> Num<F> {
             Num::U64(n) => F::from(n),
             Num::Scalar(s) => s,
         }
+    }
+
+    pub fn from_scalar(s: F) -> Self {
+        Num::Scalar(s)
     }
 }
 
@@ -273,7 +283,12 @@ mod tests {
 
         let mut a = Num::<Scalar>::U64(10);
         a /= Num::U64(3);
-        assert_eq!(a, Num::U64(10 / 3));
+
+        // The result is not a Num::U64.
+        assert!(matches!(a, Num::<Scalar>::Scalar(_)));
+
+        a *= Num::U64(3);
+        assert_eq!(a, Num::<Scalar>::Scalar(Scalar::from(10)));
 
         // scalar - scalar - no overflow
         let mut a = Num::Scalar(Scalar::from(10));
@@ -298,5 +313,29 @@ mod tests {
             a,
             Num::Scalar(Scalar::from(10) * Scalar::from(5).invert().unwrap())
         );
+    }
+
+    #[test]
+    fn test_num_hash() {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::Hasher;
+
+        let n = 123u64;
+        let a: Num<Scalar> = Num::U64(n);
+        let b = Num::Scalar(Scalar::from(n));
+
+        let a_hash = {
+            let mut hasher = DefaultHasher::new();
+            a.hash(&mut hasher);
+            hasher.finish()
+        };
+
+        let b_hash = {
+            let mut hasher = DefaultHasher::new();
+            b.hash(&mut hasher);
+            hasher.finish()
+        };
+
+        assert_eq!(a_hash, b_hash);
     }
 }

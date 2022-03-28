@@ -3,6 +3,10 @@
 [![Build Status][build-image]][build-link]
 ![minimum rustc 1.56][msrv-image]
 
+# Disclaimer
+
+**DISCLAIMER:** Lurk is an early research-stage language. Neither the cryptography nor the software has been audited, and there is currently no trusted setup for Groth16 circuits. Do not use Lurk in production environments or anywhere else that security is necessary. 
+
 # Submodules
 
 Lurk source files used in tests are in the [lurk-lib](https://github.com/lurk-lang/lurk-lib) submodule. You must

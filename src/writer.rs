@@ -15,7 +15,13 @@ pub trait Write<F: PrimeField> {
 
 impl<F: PrimeField> Write<F> for Ptr<F> {
     fn fmt<W: io::Write>(&self, store: &Store<F>, w: &mut W) -> io::Result<()> {
-        if let Some(expr) = store.fetch(self) {
+        use crate::store::Pointer;
+        if self.is_opaque() {
+            // This should never fail.
+            write!(w, "<Opaque ")?;
+            write!(w, "{:?}", self.tag())?;
+            write!(w, ">")
+        } else if let Some(expr) = store.fetch(self) {
             expr.fmt(store, w)
         } else {
             Ok(())
@@ -62,6 +68,9 @@ impl<F: PrimeField> Write<F> for Expression<'_, F> {
                 write!(w, "(")?;
                 self.print_tail(store, w)
             }
+            Opaque(f) => {
+                write!(w, "<Opaque {:?}>", f)
+            }
         }
     }
 }
@@ -71,24 +80,46 @@ impl<F: PrimeField> Expression<'_, F> {
         match self {
             Expression::Nil => write!(w, ")"),
             Expression::Cons(car, cdr) => {
-                let car = store.fetch(car).unwrap();
-                let cdr = store.fetch(cdr).unwrap();
+                let car = store.fetch(car);
+                let cdr = store.fetch(cdr);
+
+                let fmt_car = |store, w: &mut W| {
+                    if let Some(car) = car {
+                        car.fmt(store, w)
+                    } else {
+                        write!(w, "<Opaque>")
+                    }
+                };
+                let fmt_cdr = |store, w: &mut W| {
+                    if let Some(cdr) = cdr {
+                        cdr.fmt(store, w)
+                    } else {
+                        write!(w, "<Opaque>")
+                    }
+                };
+
                 match cdr {
-                    Expression::Nil => {
-                        car.fmt(store, w)?;
+                    Some(Expression::Nil) => {
+                        fmt_car(store, w)?;
+                        // car.fmt(store, w)?;
                         write!(w, ")")
                     }
-                    Expression::Cons(_, _) => {
-                        car.fmt(store, w)?;
+                    Some(Expression::Cons(_, _)) => {
+                        fmt_car(store, w)?;
                         write!(w, " ")?;
-                        cdr.print_tail(store, w)
+                        if let Some(cdr) = cdr {
+                            cdr.print_tail(store, w)
+                        } else {
+                            write!(w, "<Opaque Tail>")
+                        }
                     }
-                    _ => {
-                        car.fmt(store, w)?;
+                    Some(_) => {
+                        fmt_car(store, w)?;
                         write!(w, " . ")?;
-                        cdr.fmt(store, w)?;
+                        fmt_cdr(store, w)?;
                         write!(w, ")")
                     }
+                    None => write!(w, "<Opaque>"),
                 }
             }
             _ => unreachable!(),
