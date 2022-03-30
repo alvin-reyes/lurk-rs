@@ -18,6 +18,8 @@ jobs:
       msrv: ${{ steps.msrv.outputs.msrv }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - id: msrv
         run: echo "::set-output name=msrv::$(echo $MSRV)"
 
@@ -34,6 +36,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: uraimo/run-on-arch-action@v2.1.1
         name: Run commands
         id: runcmd
@@ -72,6 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -95,6 +101,8 @@ jobs:
 #    runs-on: macos-latest
 #    steps:
 #      - uses: actions/checkout@v2
+#        with:
+#          submodules: recursive
 #      - uses: actions-rs/toolchain@v1
 #        with:
 #          profile: minimal
